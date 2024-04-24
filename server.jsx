@@ -51,7 +51,21 @@ app.get('/api/v1/activities/:activityId', (req, res) => {
   });
 });
 
-// Define other routes similarly...
+// GET routine by id
+app.get('/api/v1/routines/:routineId', (req, res) => {
+  const { routineId } = req.params;
+  db.get('SELECT * FROM routines WHERE id = ?', [routineId], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (!row) {
+      res.status(404).json({ message: 'Routine not found' });
+      return;
+    }
+    res.json(row);
+  });
+});
 
 // POST new activity
 app.post('/api/v1/activities', (req, res) => {
@@ -90,6 +104,27 @@ app.post('/api/v1/routines', (req, res) => {
       is_public,
       name,
       goal
+    });
+  });
+});
+
+// POST new routines_activities
+app.post('/api/v1/routines_activities', (req, res) => {
+  const { routine_id, activity_id, count } = req.body;
+  if (!routine_id || !activity_id || !count) {
+    res.status(400).json({ message: 'routine_id, activity_id, and count are required' });
+    return;
+  }
+  db.run('INSERT INTO routines_activities (routine_id, activity_id, count) VALUES (?, ?, ?)', [routine_id, activity_id, count], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({
+      id: this.lastID,
+      routine_id,
+      activity_id,
+      count
     });
   });
 });
